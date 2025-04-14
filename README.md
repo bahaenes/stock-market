@@ -71,4 +71,4 @@ Ardından tarayıcınızda `http://127.0.0.1:5000/` (veya terminalde belirtilen 
 
 ## Lisans
 
-(Buraya bir lisans belirtebilirsiniz, örn: MIT Lisansı) 
+(MIT Lisansı) 
