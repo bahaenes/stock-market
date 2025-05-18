@@ -1,18 +1,37 @@
-# Sanal Ortamlar
-venv/
-env/
-.venv/
-*.env
-
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 
-# IDE/Editör dosyaları (isteğe bağlı)
+# Sanal Ortam
+venv/
+ENV/
+.venv/
+.env/
+
+# Ortam Değişkenleri Dosyası
+.env
+
+# IDE/Editör Dosyaları
 .vscode/
 .idea/
+*.sublime-project
+*.sublime-workspace
 
-# Hassas bilgiler
-.env
-*.log 
+# İşletim Sistemi Dosyaları
+.DS_Store
+Thumbs.db
+
+# Log Dosyaları (Eğer varsa ve lokalde tutuluyorsa)
+*.log
+logs/
+
+# Cache Dosyaları (Eğer varsa)
+.cache/
+*.cache
+
+# Kullanıcı tarafından yüklenen dosyalar (eğer varsa ve takip edilmemesi gerekiyorsa)
+# uploads/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints 

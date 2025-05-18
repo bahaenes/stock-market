@@ -1,74 +1,73 @@
-# Finans Analiz ve Tahmin Aracı
+# Finans Analiz Aracı
 
-Bu proje, Flask kullanılarak geliştirilmiş bir web uygulamasıdır. Belirli bir hisse senedi için temel ve teknik göstergeleri analiz eder, ilgili haberleri çeker, duyarlılık analizi yapar ve Facebook Prophet modeli ile kısa vadeli fiyat tahmini sunar.
+Bu proje, Flask kullanılarak geliştirilmiş bir web uygulamasıdır. Kullanıcılara hisse senedi verilerini analiz etme, teknik göstergeleri görüntüleme, ilgili haberler hakkında duyarlılık analizi yapma ve XGBoost modeli ile fiyat tahmini alma imkanı sunar.
 
 ## Özellikler
 
-*   Popüler BIST ve ABD hisseleri için kenar çubuğundan hızlı erişim.
-*   Seçilebilir periyotlarda hisse senedi fiyat grafiği (Kapanış, SMA 20, SMA 50).
-*   Facebook Prophet ile gelecek 30 gün için fiyat tahmini ve güven aralığı görselleştirmesi.
-*   Teknik gösterge grafikleri (RSI, MACD).
-*   Temel göstergeler (F/K, Piyasa Değeri, Hacim, 52 Hafta Zirve/Dip vb.).
-*   Teknik göstergelerin son değerleri (RSI, MACD).
-*   Analist tavsiyesi (varsa).
-*   İlgili güncel haberler (NewsAPI - Son 7 gün).
-*   Haber başlıkları üzerinden duyarlılık analizi (VADER).
-*   Teknik göstergeler, haber duyarlılığı ve Prophet tahminini içeren birleşik özet yorum.
-*   **Yasal Uyarı:** Tüm analizler ve tahminler yalnızca bilgilendirme amaçlıdır, yatırım tavsiyesi değildir.
+-   **Kapsamlı Hisse Senedi Listesi:** BIST ve ABD borsalarından popüler hisse senetlerini içerir.
+-   **Dinamik Grafikleme:** Plotly kullanılarak çizgi ve mum grafikleri ile fiyat hareketleri, hareketli ortalamalar (SMA), Bollinger Bantları, RSI ve MACD göstergeleri görselleştirilir.
+-   **Temel ve Teknik Göstergeler:** F/K oranı, piyasa değeri, işlem hacmi gibi temel verilerin yanı sıra RSI, MACD gibi teknik göstergelerin son değerleri sunulur.
+-   **Haber Duyarlılık Analizi:** NewsAPI üzerinden çekilen güncel haber başlıkları ve açıklamaları FinBERT (Hugging Face Transformers tabanlı) modeli ile analiz edilerek pozitif, negatif veya nötr duyarlılıkları belirlenir.
+-   **Fiyat Tahmini:** XGBoost modeli kullanılarak seçilen hisse senedi için kısa vadeli fiyat tahmini yapılır.
+-   **Detaylı Yorumlama:** Teknik göstergeler, haber duyarlılığı ve model tahminleri birleştirilerek kapsamlı bir analiz özeti ve yapay zeka destekli yorumlar sunulur.
+-   **Kullanıcı Dostu Arayüz:** Kenar çubuğunda aranabilir hisse senedi listesi ve ana içerik alanında analiz sonuçları net bir şekilde gösterilir.
+-   **Önbellekleme:** Sık erişilen hisse senedi bilgileri ve verileri için basit bir önbellekleme mekanizması içerir.
 
 ## Kurulum
 
-1.  **Depoyu Klonlayın:**
-    ```bash
-    git clone https://github.com/KULLANICI_ADINIZ/DEPO_ADINIZ.git
-    cd DEPO_ADINIZ
-    ```
-    *(KULLANICI_ADINIZ ve DEPO_ADINIZ kısımlarını kendi bilgilerinizle değiştirin)*
+1.  **Proje Dosyalarını İndirin:**
+    Bu repoyu klonlayın veya dosyaları ZIP olarak indirin.
 
-2.  **(Önerilen) Sanal Ortam Oluşturun ve Aktif Edin:**
+2.  **Sanal Ortam Oluşturun (Önerilir):**
     ```bash
     python -m venv venv
-    # Windows:
-    venv\Scripts\activate
-    # macOS/Linux:
-    source venv/bin/activate
+    source venv/bin/activate  # Linux/macOS için
+    # venv\Scripts\activate  # Windows için
     ```
 
-3.  **Gerekli Kütüphaneleri Kurun:**
+3.  **Bağımlılıkları Yükleyin:**
+    Proje ana dizinindeyken aşağıdaki komutu çalıştırın:
     ```bash
     pip install -r requirements.txt
     ```
 
-4.  **NewsAPI Anahtarını Ayarlayın:**
-    Haber analizi özelliğinin çalışması için bir [NewsAPI.org](https://newsapi.org/) anahtarına ihtiyacınız var.
-    *   **Yöntem 1 (Önerilen): Ortam Değişkeni:** Uygulamayı çalıştırmadan önce terminalinizde aşağıdaki komutlardan uygun olanı çalıştırın (`YOUR_API_KEY` kısmını kendi anahtarınızla değiştirin):
-        ```bash
-        # Windows (Komut İstemi): set NEWS_API_KEY=YOUR_API_KEY
-        # Windows (PowerShell): $env:NEWS_API_KEY="YOUR_API_KEY"
-        # macOS/Linux: export NEWS_API_KEY="YOUR_API_KEY"
-        ```
-    *   **Yöntem 2: `.env` Dosyası:** Proje ana dizininde `.env` adında bir dosya oluşturun ve içine şunu yazın:
-        ```
-        NEWS_API_KEY=YOUR_API_KEY
-        ```
-        *Unutmayın: `.env` dosyası `.gitignore` içinde olmalıdır.*
+4.  **Ortam Değişkenlerini Ayarlayın:**
+    Haber analizi özelliğini kullanmak için bir NewsAPI anahtarına ihtiyacınız olacaktır.
+    Proje ana dizininde `.env` adında bir dosya oluşturun ve içine aşağıdaki satırı ekleyin (kendi API anahtarınızla değiştirin):
+    ```
+    NEWS_API_KEY=YOUR_NEWS_API_KEY
+    ```
+    Eğer NewsAPI anahtarınız yoksa, haber analizi bölümü atlanacaktır.
 
-## Çalıştırma
+## Kullanım
 
-Uygulamayı başlatmak için proje ana dizinindeyken terminalde şu komutu çalıştırın:
-```bash
-python app.py
-```
-Ardından tarayıcınızda `http://127.0.0.1:5000/` (veya terminalde belirtilen başka bir adres) adresine gidin.
+1.  Proje ana dizinindeyken Flask uygulamasını başlatın:
+    ```bash
+    python app.py
+    ```
+2.  Web tarayıcınızda `http://127.0.0.1:5000/` adresine gidin.
+3.  Kenar çubuğundaki listeden bir hisse senedi seçin veya arama kutusunu kullanarak hisse kodu/piyasa ile arama yapın.
+4.  Alternatif olarak, ana formdaki "Hisse Kodu" alanına doğrudan bir kod girin (Örn: `GARAN.IS`, `AAPL`).
+5.  İstediğiniz periyodu ve grafik türünü seçin.
+6.  "Analiz Et" butonuna tıklayın.
 
-## Olası İyileştirmeler
+## Teknolojiler
 
-*   Prophet modeli için parametre optimizasyonu.
-*   Daha fazla teknik gösterge eklemek (Bollinger Bantları vb.).
-*   Türkçe haber kaynakları ve Türkçe duyarlılık analizi entegrasyonu.
-*   Kullanıcıların kendi portföylerini takip edebilmesi.
-*   Daha gelişmiş ML modelleri (LSTM vb.) denemek.
+-   **Backend:** Flask (Python)
+-   **Veri Kaynağı (Hisse Senetleri):** yfinance
+-   **Veri Kaynağı (Haberler):** NewsAPI
+-   **Veri Analizi ve Manipülasyonu:** Pandas
+-   **Teknik Göstergeler:** ta
+-   **Grafikleme:** Plotly
+-   **Makine Öğrenimi (Duyarlılık Analizi):** Hugging Face Transformers (FinBERT), PyTorch
+-   **Makine Öğrenimi (Fiyat Tahmini):** XGBoost
+-   **Duyarlılık Analizi (Alternatif/Basit):** VADER Sentiment
+-   **Ortam Değişkenleri:** python-dotenv
+
+## Katkıda Bulunma
+
+Katkılarınız her zaman beklerim! Lütfen bir issue açın veya bir pull request gönderin.
 
 ## Lisans
 
-(MIT Lisansı) 
+Bu proje MIT Lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosyasına bakınız. 
