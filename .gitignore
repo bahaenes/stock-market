@@ -2,36 +2,97 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
 
 # Sanal Ortam
 venv/
 ENV/
 .venv/
 .env/
+env/
 
 # Ortam Değişkenleri Dosyası
 .env
+.env.local
+.env.development
+.env.production
 
 # IDE/Editör Dosyaları
 .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
+*.swp
+*.swo
+*~
 
 # İşletim Sistemi Dosyaları
 .DS_Store
 Thumbs.db
+*.tmp
 
-# Log Dosyaları (Eğer varsa ve lokalde tutuluyorsa)
+# Log Dosyaları
 *.log
 logs/
+*.log.*
 
-# Cache Dosyaları (Eğer varsa)
+# Cache Dosyaları
 .cache/
 *.cache
+.model_cache/
+model_cache/
 
-# Kullanıcı tarafından yüklenen dosyalar (eğer varsa ve takip edilmemesi gerekiyorsa)
-# uploads/
+# Database Dosyaları
+*.db
+*.sqlite
+*.sqlite3
+instance/
 
 # Jupyter Notebook Checkpoints
-.ipynb_checkpoints 
+.ipynb_checkpoints/
+
+# Model Dosyaları (Büyük dosyalar)
+*.pkl
+*.model
+*.joblib
+
+# Test Dosyaları (Opsiyonel)
+# test_*.py
+# *_test.py
+
+# Coverage Reports
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Transformers cache
+.cache/huggingface/
+
+# Temporary files
+temp/
+tmp/
+
+# User uploaded files
+uploads/
+
+# Local development
+local_config.py 

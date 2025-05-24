@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Ana Sayfa - Finans Analiz Aracı{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="main-container fade-in">
+        <!-- Hero Section -->
+        <div class="row mb-5">
+            <div class="col-lg-8 mx-auto text-center">
+                <h1 class="display-4 fw-bold text-primary mb-3">
+                    <i class="bi bi-graph-up-arrow me-3"></i>
+                    Akıllı Finans Analiz Aracı
+                </h1>
+                <p class="lead text-muted mb-4">
+                    Yapay zeka destekli teknik analiz, haber duyarlılığı ve fiyat tahminleri ile 
+                    hisse senedi yatırımlarınızda doğru kararlar alın.
+                </p>
+                
+                <!-- Piyasa Duyarlılığı Kartı -->
+                {% if market_sentiment %}
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-newspaper me-2"></i>
+                            Genel Piyasa Duyarlılığı
+                        </h6>
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <h4 class="text-primary animated-counter">{{ market_sentiment.article_count }}</h4>
+                                <small class="text-muted">Analiz Edilen Haber</small>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="{% if market_sentiment.sentiment_score > 0.1 %}text-success{% elif market_sentiment.sentiment_score < -0.1 %}text-danger{% else %}text-warning{% endif %}">
+                                    {{ "%.2f"|format(market_sentiment.sentiment_score) }}
+                                </h4>
+                                <small class="text-muted">Duyarlılık Skoru</small>
+                            </div>
+                            <div class="col-md-4">
+                                <h4 class="text-info">{{ market_sentiment.distribution.positive }}</h4>
+                                <small class="text-muted">Pozitif Haber</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Ana Analiz Formu -->
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-search me-2"></i>
+                            Hisse Senedi Analizi
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('main.analyze') }}" data-loading="true">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="ticker" class="form-label">
+                                        <i class="bi bi-building me-1"></i>
+                                        Hisse Senedi Kodu
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="ticker" 
+                                           name="ticker" 
+                                           placeholder="Örn: GARAN.IS, AAPL, MSFT" 
+                                           required
+                                           autocomplete="off">
+                                    <div id="searchResults" class="list-group mt-1 position-absolute" style="z-index: 1000; display: none;"></div>
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label for="period" class="form-label">
+                                        <i class="bi bi-calendar me-1"></i>
+                                        Zaman Periyodu
+                                    </label>
+                                    <select class="form-select" id="period" name="period">
+                                        <option value="1mo">1 Ay</option>
+                                        <option value="3mo">3 Ay</option>
+                                        <option value="6mo">6 Ay</option>
+                                        <option value="1y" selected>1 Yıl</option>
+                                        <option value="2y">2 Yıl</option>
+                                        <option value="5y">5 Yıl</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-3 mb-3">
+                                    <label for="chart_type" class="form-label">
+                                        <i class="bi bi-bar-chart me-1"></i>
+                                        Grafik Türü
+                                    </label>
+                                    <select class="form-select" id="chart_type" name="chart_type">
+                                        <option value="line">Çizgi Grafik</option>
+                                        <option value="candlestick">Mum Grafik</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="bi bi-graph-up me-2"></i>
+                                    Analiz Başlat
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Özellikler -->
+                <div class="row mt-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-robot display-4 text-primary mb-3"></i>
+                                <h5>Yapay Zeka Analizi</h5>
+                                <p class="text-muted">
+                                    XGBoost ve Random Forest modelleri ile gelişmiş fiyat tahminleri
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-newspaper display-4 text-success mb-3"></i>
+                                <h5>Haber Duyarlılığı</h5>
+                                <p class="text-muted">
+                                    FinBERT modeli ile haber analizi ve duyarlılık skorlaması
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-graph-up display-4 text-warning mb-3"></i>
+                                <h5>Teknik Analiz</h5>
+                                <p class="text-muted">
+                                    RSI, MACD, Bollinger Bands ve 10+ teknik gösterge
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <i class="bi bi-clock-history display-4 text-info mb-3"></i>
+                                <h5>Gerçek Zamanlı</h5>
+                                <p class="text-muted">
+                                    Güncel fiyat verileri ve anlık piyasa analizi
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sidebar - Popüler Hisseler -->
+            <div class="col-lg-4">
+                <div class="sidebar p-3">
+                    <h6 class="fw-bold mb-3">
+                        <i class="bi bi-star me-2"></i>
+                        Popüler Hisse Senetleri
+                    </h6>
+                    
+                    <div class="mb-3">
+                        <input type="text" 
+                               class="form-control" 
+                               id="stockSearch" 
+                               placeholder="Hisse ara..."
+                               onkeyup="searchStocks(this.value)">
+                    </div>
+                    
+                    <div class="stock-list" style="max-height: 400px; overflow-y: auto;">
+                        {% for stock in stock_list[:20] %}
+                        <div class="stock-item d-flex justify-content-between align-items-center"
+                             onclick="selectStock('{{ stock.ticker }}')">
+                            <div>
+                                <strong>{{ stock.ticker }}</strong>
+                                <div class="small text-muted">{{ stock.name }}</div>
+                            </div>
+                            <span class="badge {% if stock.market == 'BIST' %}bg-primary{% elif stock.market == 'US' %}bg-success{% else %}bg-secondary{% endif %} market-badge">
+                                {{ stock.market }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Hızlı Linkler -->
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-link-45deg me-2"></i>
+                            Hızlı Erişim
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('main.compare') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-bar-chart me-2"></i>
+                                Hisse Karşılaştır
+                            </a>
+                            <a href="/api/health" class="btn btn-outline-info btn-sm">
+                                <i class="bi bi-globe me-2"></i>
+                                API Durumu
+                            </a>
+                            <button class="btn btn-outline-warning btn-sm" onclick="showRandomStock()">
+                                <i class="bi bi-shuffle me-2"></i>
+                                Rastgele Hisse
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Hisse senedi seçme fonksiyonu
+    function selectStock(ticker) {
+        document.getElementById('ticker').value = ticker;
+    }
+
+            // Rastgele hisse seçme    function showRandomStock() {        const stocks = [            {% for stock in stock_list %}'{{ stock.ticker }}'{% if not loop.last %},{% endif %}{% endfor %}        ];        const randomStock = stocks[Math.floor(Math.random() * stocks.length)];        selectStock(randomStock);    }
+
+    // Hisse arama fonksiyonu (geliştirilmiş)
+    function searchStocks(query) {
+        const resultsDiv = document.getElementById('searchResults');
+        
+        if (query.length < 2) {
+            resultsDiv.style.display = 'none';
+            return;
+        }
+        
+                // Basit frontend filtreleme (daha sonra API'ye bağlanabilir)        const stocks = [            {% for stock in stock_list %}{ticker: '{{ stock.ticker }}', name: '{{ stock.name }}', market: '{{ stock.market }}'}{% if not loop.last %},{% endif %}{% endfor %}        ];
+        
+        const filteredStocks = stocks.filter(stock => 
+            stock.ticker.toLowerCase().includes(query.toLowerCase()) ||
+            stock.name.toLowerCase().includes(query.toLowerCase())
+        ).slice(0, 8);
+        
+        if (filteredStocks.length > 0) {
+            resultsDiv.innerHTML = '';
+            filteredStocks.forEach(stock => {
+                const item = document.createElement('button');
+                item.className = 'list-group-item list-group-item-action';
+                item.type = 'button';
+                item.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${stock.ticker}</strong>
+                            <div class="small text-muted">${stock.name}</div>
+                        </div>
+                        <span class="badge bg-${stock.market === 'BIST' ? 'primary' : stock.market === 'US' ? 'success' : 'secondary'}">${stock.market}</span>
+                    </div>
+                `;
+                item.onclick = () => {
+                    selectStock(stock.ticker);
+                    resultsDiv.style.display = 'none';
+                };
+                resultsDiv.appendChild(item);
+            });
+            resultsDiv.style.display = 'block';
+        } else {
+            resultsDiv.style.display = 'none';
+        }
+    }
+
+    // Sayfa dışına tıklandığında arama sonuçlarını gizle
+    document.addEventListener('click', function(event) {
+        const searchInput = document.getElementById('stockSearch');
+        const searchResults = document.getElementById('searchResults');
+        
+        if (!searchInput.contains(event.target) && !searchResults.contains(event.target)) {
+            searchResults.style.display = 'none';
+        }
+    });
+
+    // Sayıları animasyonlu şekilde göster
+    document.addEventListener('DOMContentLoaded', function() {
+        const counters = document.querySelectorAll('.animated-counter');
+        counters.forEach(counter => {
+            const target = parseInt(counter.textContent);
+            animateNumber(counter, target);
+        });
+    });
+
+    // Form validasyonu
+    document.querySelector('form[data-loading="true"]').addEventListener('submit', function(e) {
+        const ticker = document.getElementById('ticker').value.trim();
+        if (!ticker) {
+            e.preventDefault();
+            alert('Lütfen bir hisse senedi kodu girin.');
+            return false;
+        }
+    });
+
+    // Enter tuşu ile arama
+    document.getElementById('ticker').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            this.form.submit();
+        }
+    });
+
+    // Otomatik büyük harf
+    document.getElementById('ticker').addEventListener('input', function() {
+        this.value = this.value.toUpperCase();
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,439 @@
+{% extends "base.html" %}
+
+{% block title %}{{ ticker }} Analizi - Finans Analiz Aracı{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="main-container fade-in">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-primary mb-1">
+                    <i class="bi bi-graph-up me-2"></i>
+                    {{ ticker }} Analizi
+                </h2>
+                <p class="text-muted mb-0">{{ stock.name }} - {{ stock.market }}</p>
+            </div>
+            <div>
+                <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Geri Dön
+                </a>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i>
+                    Yazdır
+                </button>
+            </div>
+        </div>
+
+        <!-- Ana Grafik -->
+        {% if chart_html %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Fiyat Grafiği ve Teknik Göstergeler
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="chart-container">
+                    {{ chart_html|safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Göstergeler Grid -->
+        <div class="row mb-4">
+            <!-- Temel Göstergeler -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-info-circle me-2"></i>
+                            Temel Bilgiler
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="indicator-grid">
+                            {% for key, value in basic_indicators.items() %}
+                            <div class="indicator-card">
+                                <div class="indicator-value">{{ value }}</div>
+                                <div class="indicator-label">{{ key }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Teknik Göstergeler -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-graph-up me-2"></i>
+                            Teknik Göstergeler
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="indicator-grid">
+                            {% for key, value in tech_indicators.items() %}
+                            <div class="indicator-card">
+                                <div class="indicator-value">{{ value }}</div>
+                                <div class="indicator-label">{{ key }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tahmin ve Haber Analizi -->
+        <div class="row mb-4">
+            <!-- Fiyat Tahmini -->
+            {% if prediction_result %}
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0">
+                            <i class="bi bi-crystal-ball me-2"></i>
+                            Fiyat Tahmini ({{ prediction_result.prediction_horizon_days }} İş Günü)
+                        </h6>
+                        {% if prediction_result.last_data_date %}
+                        <small class="text-muted">
+                            <i class="bi bi-calendar-check me-1"></i>
+                            Son veri: {{ prediction_result.last_data_date }}
+                        </small>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <h3 class="text-primary">
+                                {{ "%.2f"|format(prediction_result.predictions['predicted_price'].iloc[-1]) }} ₺
+                            </h3>
+                            <p class="text-muted">
+                                Son Tahmin Fiyatı
+                                {% if prediction_result.next_trading_day %}
+                                <br><small>({{ prediction_result.next_trading_day }} - {{ prediction_result.predictions['date'].iloc[-1].strftime('%Y-%m-%d') }})</small>
+                                {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h5 class="text-info">{{ "%.0f"|format(prediction_result.confidence * 100) }}%</h5>
+                                <small class="text-muted">Güven Oranı</small>
+                            </div>
+                            <div class="col-4">
+                                <h5 class="text-secondary">{{ prediction_result.model_count }}</h5>
+                                <small class="text-muted">Model Sayısı</small>
+                            </div>
+                            <div class="col-4">
+                                {% set price_change = (prediction_result.predictions['predicted_price'].iloc[-1] / prediction_result.last_actual_price - 1) * 100 %}
+                                <h5 class="{% if price_change > 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ "%+.1f"|format(price_change) }}%
+                                </h5>
+                                <small class="text-muted">Beklenen Değişim</small>
+                            </div>
+                        </div>
+                        
+                        {% if prediction_result.individual_models %}
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="bi bi-cpu me-1"></i>
+                                Kullanılan modeller: {{ prediction_result.individual_models|join(', ') }}
+                            </small>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="progress progress-custom mt-3">
+                            <div class="progress-bar bg-info" 
+                                 role="progressbar" 
+                                 style="width: {{ (prediction_result.confidence * 100)|round(1) }}%"
+                                 aria-valuenow="{{ (prediction_result.confidence * 100)|round(1) }}"
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        
+                        {% if prediction_result.prediction_created_at %}
+                        <div class="mt-2 text-center">
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>
+                                Tahmin oluşturulma: {{ prediction_result.prediction_created_at }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Haber Duyarlılığı -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-newspaper me-2"></i>
+                            Haber Duyarlılığı ({{ news_analysis.total_count }} Haber)
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if news_analysis.total_count > 0 %}
+                        <div class="text-center mb-3">
+                            <h3 class="{% if news_analysis.average_sentiment > 0.1 %}text-success{% elif news_analysis.average_sentiment < -0.1 %}text-danger{% else %}text-warning{% endif %}">
+                                {{ "%.3f"|format(news_analysis.average_sentiment) }}
+                            </h3>
+                            <p class="text-muted">Ortalama Duyarlılık</p>
+                        </div>
+                        
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h5 class="text-success">{{ news_analysis.sentiment_distribution.positive }}</h5>
+                                <small class="text-muted">Pozitif</small>
+                            </div>
+                            <div class="col-4">
+                                <h5 class="text-warning">{{ news_analysis.sentiment_distribution.neutral }}</h5>
+                                <small class="text-muted">Nötr</small>
+                            </div>
+                            <div class="col-4">
+                                <h5 class="text-danger">{{ news_analysis.sentiment_distribution.negative }}</h5>
+                                <small class="text-muted">Negatif</small>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="text-center text-muted">
+                            <i class="bi bi-exclamation-circle display-4 mb-3"></i>
+                            <p>Son 7 gün içinde ilgili haber bulunamadı.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analiz Özeti -->
+        {% if summary %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-file-text me-2"></i>
+                    Analiz Özeti
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info border-0">
+                    <pre class="mb-0" style="white-space: pre-wrap; font-family: inherit;">{{ summary }}</pre>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Son Haberler -->
+        {% if news_analysis.articles %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-newspaper me-2"></i>
+                    Son Haberler
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% for article in news_analysis.articles[:6] %}
+                    <div class="col-lg-6 mb-3">
+                        <div class="news-item">
+                            <h6 class="mb-2">
+                                <a href="{{ article.url }}" target="_blank" class="text-decoration-none">
+                                    {{ article.title[:80] }}{% if article.title|length > 80 %}...{% endif %}
+                                </a>
+                            </h6>
+                            <p class="small text-muted mb-2">{{ article.description[:120] }}{% if article.description|length > 120 %}...{% endif %}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge {% if article.sentiment_category == 'positive' %}bg-success{% elif article.sentiment_category == 'negative' %}bg-danger{% else %}bg-warning{% endif %}">
+                                    {% if article.sentiment_category == 'positive' %}Pozitif{% elif article.sentiment_category == 'negative' %}Negatif{% else %}Nötr{% endif %}
+                                </span>
+                                <small class="text-muted">{{ article.published_at[:10] }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Yeni Analiz Butonu -->
+        <div class="text-center">
+            <form method="POST" action="{{ url_for('main.analyze') }}" class="d-inline" data-loading="true">
+                <input type="hidden" name="ticker" value="{{ ticker }}">
+                <input type="hidden" name="period" value="1y">
+                <input type="hidden" name="chart_type" value="line">
+                <button type="submit" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-arrow-clockwise me-1"></i>
+                    Analizi Yenile
+                </button>
+            </form>
+            
+            <a href="{{ url_for('main.compare') }}" class="btn btn-outline-success">
+                <i class="bi bi-bar-chart me-1"></i>
+                Hisse Karşılaştır
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .navbar, footer, .btn, .card-header {
+        display: none !important;
+    }
+    
+    .main-container {
+        margin: 0 !important;
+        padding: 1rem !important;
+        box-shadow: none !important;
+        background: white !important;
+    }
+    
+    .card {
+        border: 1px solid #ccc !important;
+        margin-bottom: 1rem !important;
+    }
+}
+
+.news-item {
+    transition: all 0.3s ease;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.news-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.indicator-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.indicator-card {
+    text-align: center;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.02);
+    transition: all 0.3s ease;
+}
+
+.indicator-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.indicator-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--bs-primary);
+}
+
+.indicator-label {
+    font-size: 0.875rem;
+    color: var(--bs-secondary);
+    margin-top: 0.25rem;
+}
+
+.chart-container {
+    min-height: 600px;
+    overflow-x: auto;
+}
+
+.progress-custom {
+    height: 8px;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.progress-custom .progress-bar {
+    border-radius: 10px;
+    transition: width 0.6s ease;
+}
+
+/* Dark theme adjustments */
+[data-bs-theme="dark"] .news-item:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme="dark"] .indicator-card {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme="dark"] .progress-custom {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Progress bar animasyonu
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach(function(bar) {
+        const targetWidth = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(function() {
+            bar.style.width = targetWidth;
+        }, 500);
+    });
+
+    // Grafik responsive yapma
+    window.addEventListener('resize', function() {
+        if (typeof Plotly !== 'undefined') {
+            const plotElements = document.querySelectorAll('.js-plotly-plot');
+            plotElements.forEach(function(element) {
+                Plotly.Plots.resize(element);
+            });
+        }
+    });
+
+    // Tooltip aktivasyonu
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = Array.from(tooltipTriggerList).map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Indicator kartları animasyonu
+    const indicatorCards = document.querySelectorAll('.indicator-card');
+    indicatorCards.forEach(function(card, index) {
+        setTimeout(function() {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'all 0.5s ease';
+            setTimeout(function() {
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100);
+        }, index * 100);
+    });
+
+    // News item hover efekti
+    const newsItems = document.querySelectorAll('.news-item');
+    newsItems.forEach(function(item) {
+        item.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateX(5px)';
+        });
+        
+        item.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateX(0)';
+        });
+    });
+});
+</script>
+{% endblock %} 

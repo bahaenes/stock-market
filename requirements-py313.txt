@@ -1,0 +1,37 @@
+# Python 3.13 uyumlu paket sürümleri
+Flask==3.0.3
+Flask-SQLAlchemy==3.1.1
+yfinance==0.2.38
+pandas==2.2.3
+plotly==5.24.1
+ta==0.11.0
+requests==2.32.3
+vaderSentiment==3.3.2
+python-dotenv==1.0.1
+scikit-learn==1.5.2
+Werkzeug==3.0.4
+Jinja2==3.1.4
+itsdangerous==2.2.0
+click==8.1.7
+gunicorn==23.0.0
+
+# NumPy ve XGBoost için pre-compiled wheel deneme
+numpy>=1.26.4
+xgboost>=2.1.1
+
+# Transformers ve torch için lightweight alternatifleri
+# transformers==4.46.2  # Opsiyonel - sadece sentiment analizi için
+# torch>=2.4.0         # Opsiyonel - büyük paket
+
+# Veritabanı
+sqlalchemy==2.0.36
+markupsafe==3.0.2
+
+# Network ve utils
+certifi>=2024.8.30
+charset-normalizer>=3.4.0
+urllib3>=2.2.3
+redis>=5.2.0
+
+# Windows için opsiyonel
+# psycopg2-binary==2.9.10  # PostgreSQL için 

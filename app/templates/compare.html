@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Hisse Karşılaştırma - Finans Analiz Aracı{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="main-container fade-in">
+        <!-- Header -->
+        <div class="text-center mb-5">
+            <h2 class="text-primary mb-3">
+                <i class="bi bi-bar-chart me-2"></i>
+                Hisse Senedi Karşılaştırma
+            </h2>
+            <p class="lead text-muted">
+                Birden fazla hisse senedinin performansını aynı grafik üzerinde karşılaştırın
+            </p>
+        </div>
+
+        <!-- Karşılaştırma Formu -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-list-check me-2"></i>
+                            Karşılaştırılacak Hisseleri Seçin
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{{ url_for('main.compare_stocks') }}" data-loading="true">
+                            <div class="row">
+                                <div class="col-md-8 mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-building me-1"></i>
+                                        Hisse Senetleri (2-6 adet seçin)
+                                    </label>
+                                    <div class="row">
+                                        {% for stock in stock_list[:24] %}
+                                        <div class="col-md-6 mb-2">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="tickers" value="{{ stock.ticker }}" 
+                                                       id="stock_{{ loop.index }}">
+                                                <label class="form-check-label d-flex justify-content-between align-items-center" 
+                                                       for="stock_{{ loop.index }}">
+                                                    <div>
+                                                        <strong>{{ stock.ticker }}</strong>
+                                                        <small class="text-muted d-block">{{ stock.name[:30] }}{% if stock.name|length > 30 %}...{% endif %}</small>
+                                                    </div>
+                                                    <span class="badge {% if stock.market == 'BIST' %}bg-primary{% elif stock.market == 'US' %}bg-success{% else %}bg-secondary{% endif %}">
+                                                        {{ stock.market }}
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mt-2">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm me-2" onclick="selectAll()">
+                                            Tümünü Seç
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAll()">
+                                            Tümünü Temizle
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4 mb-3">
+                                    <label for="period" class="form-label">
+                                        <i class="bi bi-calendar me-1"></i>
+                                        Zaman Periyodu
+                                    </label>
+                                    <select class="form-select" id="period" name="period">
+                                        <option value="1mo">1 Ay</option>
+                                        <option value="3mo">3 Ay</option>
+                                        <option value="6mo">6 Ay</option>
+                                        <option value="1y" selected>1 Yıl</option>
+                                        <option value="2y">2 Yıl</option>
+                                        <option value="5y">5 Yıl</option>
+                                    </select>
+                                    
+                                    <div class="mt-3">
+                                        <label class="form-label">Seçilen Hisseler:</label>
+                                        <div id="selectedStocks" class="small text-muted">
+                                            Henüz hisse seçilmedi
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary btn-lg" disabled id="submitBtn">
+                                    <i class="bi bi-graph-up me-2"></i>
+                                    Karşılaştırmayı Başlat
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Popüler Karşılaştırmalar -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <h5 class="text-center mb-4">
+                    <i class="bi bi-star me-2"></i>
+                    Popüler Karşılaştırmalar
+                </h5>
+                <div class="row">
+                    <div class="col-lg-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Bankacılık Sektörü</h6>
+                                <p class="card-text small">GARAN.IS, AKBNK.IS, ISCTR.IS, YKBNK.IS</p>
+                                <button class="btn btn-outline-primary btn-sm" onclick="selectPreset(['GARAN.IS', 'AKBNK.IS', 'ISCTR.IS', 'YKBNK.IS'])">
+                                    Seç
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Teknoloji Devleri</h6>
+                                <p class="card-text small">AAPL, MSFT, GOOGL, META</p>
+                                <button class="btn btn-outline-primary btn-sm" onclick="selectPreset(['AAPL', 'MSFT', 'GOOGL', 'META'])">
+                                    Seç
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4 mb-3">
+                        <div class="card h-100">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">Holding Şirketleri</h6>
+                                <p class="card-text small">KCHOL.IS, SAHOL.IS, THYAO.IS</p>
+                                <button class="btn btn-outline-primary btn-sm" onclick="selectPreset(['KCHOL.IS', 'SAHOL.IS', 'THYAO.IS'])">
+                                    Seç
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Seçili hisseleri takip et
+    function updateSelectedStocks() {
+        const checkboxes = document.querySelectorAll('input[name="tickers"]:checked');
+        const selectedDiv = document.getElementById('selectedStocks');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (checkboxes.length > 0) {
+            const selectedTickers = Array.from(checkboxes).map(cb => cb.value);
+            selectedDiv.innerHTML = selectedTickers.join(', ');
+            
+            if (checkboxes.length >= 2 && checkboxes.length <= 6) {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('btn-secondary');
+                submitBtn.classList.add('btn-primary');
+            } else {
+                submitBtn.disabled = true;
+                submitBtn.classList.remove('btn-primary');
+                submitBtn.classList.add('btn-secondary');
+                
+                if (checkboxes.length < 2) {
+                    selectedDiv.innerHTML += ' <span class="text-warning">(En az 2 hisse seçin)</span>';
+                } else if (checkboxes.length > 6) {
+                    selectedDiv.innerHTML += ' <span class="text-danger">(En fazla 6 hisse seçebilirsiniz)</span>';
+                }
+            }
+        } else {
+            selectedDiv.innerHTML = 'Henüz hisse seçilmedi';
+            submitBtn.disabled = true;
+            submitBtn.classList.remove('btn-primary');
+            submitBtn.classList.add('btn-secondary');
+        }
+    }
+
+    // Tüm checkboxları seç/temizle
+    function selectAll() {
+        const checkboxes = document.querySelectorAll('input[name="tickers"]');
+        checkboxes.forEach(cb => cb.checked = true);
+        updateSelectedStocks();
+    }
+
+    function clearAll() {
+        const checkboxes = document.querySelectorAll('input[name="tickers"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        updateSelectedStocks();
+    }
+
+    // Preset seçimleri
+    function selectPreset(tickers) {
+        clearAll();
+        tickers.forEach(ticker => {
+            const checkbox = document.querySelector(`input[value="${ticker}"]`);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+        updateSelectedStocks();
+    }
+
+    // Event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('input[name="tickers"]');
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateSelectedStocks);
+        });
+        
+        updateSelectedStocks();
+    });
+</script>
+{% endblock %} 

@@ -1,73 +1,220 @@
-# Finans Analiz Aracı
+# 📈 Finans Analiz Aracı - Türkiye Finans Piyasaları
 
-Bu proje, Flask kullanılarak geliştirilmiş bir web uygulamasıdır. Kullanıcılara hisse senedi verilerini analiz etme, teknik göstergeleri görüntüleme, ilgili haberler hakkında duyarlılık analizi yapma ve XGBoost modeli ile fiyat tahmini alma imkanı sunar.
+Bu proje, Flask kullanılarak geliştirilmiş gelişmiş bir web uygulamasıdır. Kullanıcılara hisse senedi verilerini analiz etme, modern makine öğrenmesi modelleri ile fiyat tahmini yapma, teknik göstergeleri görüntüleme ve haber duyarlılık analizi yapma imkanı sunar.
 
-## Özellikler
+## ✨ Özellikler
 
--   **Kapsamlı Hisse Senedi Listesi:** BIST ve ABD borsalarından popüler hisse senetlerini içerir.
--   **Dinamik Grafikleme:** Plotly kullanılarak çizgi ve mum grafikleri ile fiyat hareketleri, hareketli ortalamalar (SMA), Bollinger Bantları, RSI ve MACD göstergeleri görselleştirilir.
--   **Temel ve Teknik Göstergeler:** F/K oranı, piyasa değeri, işlem hacmi gibi temel verilerin yanı sıra RSI, MACD gibi teknik göstergelerin son değerleri sunulur.
--   **Haber Duyarlılık Analizi:** NewsAPI üzerinden çekilen güncel haber başlıkları ve açıklamaları FinBERT (Hugging Face Transformers tabanlı) modeli ile analiz edilerek pozitif, negatif veya nötr duyarlılıkları belirlenir.
--   **Fiyat Tahmini:** XGBoost modeli kullanılarak seçilen hisse senedi için kısa vadeli fiyat tahmini yapılır.
--   **Detaylı Yorumlama:** Teknik göstergeler, haber duyarlılığı ve model tahminleri birleştirilerek kapsamlı bir analiz özeti ve yapay zeka destekli yorumlar sunulur.
--   **Kullanıcı Dostu Arayüz:** Kenar çubuğunda aranabilir hisse senedi listesi ve ana içerik alanında analiz sonuçları net bir şekilde gösterilir.
--   **Önbellekleme:** Sık erişilen hisse senedi bilgileri ve verileri için basit bir önbellekleme mekanizması içerir.
+### 📊 Veri Analizi
+- **Kapsamlı Hisse Senedi Listesi:** BIST ve ABD borsalarından popüler hisse senetleri
+- **Gerçek Zamanlı Veri:** Yahoo Finance API ile güncel veriler
+- **Teknik Göstergeler:** RSI, MACD, Bollinger Bantları, hareketli ortalamalar
 
-## Kurulum
+### 🤖 Modern ML Modelleri
+- **LightGBM:** Gradient boosting ile yüksek performanslı tahmin
+- **Prophet:** Facebook'un zaman serisi analiz modeli
+- **RandomForest:** Ensemble öğrenme yöntemi
+- **Ensemble Modeling:** Birden fazla modelin birleşimi ile daha güvenilir tahminler
 
-1.  **Proje Dosyalarını İndirin:**
-    Bu repoyu klonlayın veya dosyaları ZIP olarak indirin.
+### 📰 Duyarlılık Analizi
+- **FinBERT:** Finans alanına özel BERT modeli ile haber analizi
+- **VADER Sentiment:** Güvenli fallback analiz
+- **Güncel Haberler:** NewsAPI entegrasyonu
 
-2.  **Sanal Ortam Oluşturun (Önerilir):**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # Linux/macOS için
-    # venv\Scripts\activate  # Windows için
-    ```
+### 🛡️ Güvenilirlik ve Performans
+- **Kapsamlı Error Handling:** Güvenli fallback mekanizmaları
+- **Timezone Handling:** Global timezone desteği
+- **Önbellekleme:** Hızlı veri erişimi
+- **İş Günü Hesaplaması:** Gerçekçi tahmin tarihleri
 
-3.  **Bağımlılıkları Yükleyin:**
-    Proje ana dizinindeyken aşağıdaki komutu çalıştırın:
-    ```bash
-    pip install -r requirements.txt
-    ```
+### 🎨 Kullanıcı Arayüzü
+- **Dinamik Grafikleme:** Plotly ile interaktif grafikler
+- **Responsive Design:** Mobil uyumlu tasarım
+- **Türkçe Arayüz:** Tam Türkçe destek
+- **Gerçek Zamanlı Güncelleme:** Anlık veri güncellemeleri
 
-4.  **Ortam Değişkenlerini Ayarlayın:**
-    Haber analizi özelliğini kullanmak için bir NewsAPI anahtarına ihtiyacınız olacaktır.
-    Proje ana dizininde `.env` adında bir dosya oluşturun ve içine aşağıdaki satırı ekleyin (kendi API anahtarınızla değiştirin):
-    ```
-    NEWS_API_KEY=YOUR_NEWS_API_KEY
-    ```
-    Eğer NewsAPI anahtarınız yoksa, haber analizi bölümü atlanacaktır.
+## 🚀 Kurulum
 
-## Kullanım
+### Gereksinimler
+- Python 3.9+ (Python 3.13 test edildi)
+- pip
+- İnternet bağlantısı
 
-1.  Proje ana dizinindeyken Flask uygulamasını başlatın:
-    ```bash
-    python app.py
-    ```
-2.  Web tarayıcınızda `http://127.0.0.1:5000/` adresine gidin.
-3.  Kenar çubuğundaki listeden bir hisse senedi seçin veya arama kutusunu kullanarak hisse kodu/piyasa ile arama yapın.
-4.  Alternatif olarak, ana formdaki "Hisse Kodu" alanına doğrudan bir kod girin (Örn: `GARAN.IS`, `AAPL`).
-5.  İstediğiniz periyodu ve grafik türünü seçin.
-6.  "Analiz Et" butonuna tıklayın.
+### 1. Projeyi Klonlayın
+```bash
+git clone https://github.com/username/stock-market.git
+cd stock-market
+```
 
-## Teknolojiler
+### 2. Sanal Ortam Oluşturun
+```bash
+python -m venv venv
 
--   **Backend:** Flask (Python)
--   **Veri Kaynağı (Hisse Senetleri):** yfinance
--   **Veri Kaynağı (Haberler):** NewsAPI
--   **Veri Analizi ve Manipülasyonu:** Pandas
--   **Teknik Göstergeler:** ta
--   **Grafikleme:** Plotly
--   **Makine Öğrenimi (Duyarlılık Analizi):** Hugging Face Transformers (FinBERT), PyTorch
--   **Makine Öğrenimi (Fiyat Tahmini):** XGBoost
--   **Duyarlılık Analizi (Alternatif/Basit):** VADER Sentiment
--   **Ortam Değişkenleri:** python-dotenv
+# Windows
+venv\Scripts\activate
 
-## Katkıda Bulunma
+# Linux/macOS
+source venv/bin/activate
+```
 
-Katkılarınız her zaman beklerim! Lütfen bir issue açın veya bir pull request gönderin.
+### 3. Bağımlılıkları Yükleyin
+```bash
+# Python 3.13 için optimize edilmiş
+pip install -r requirements.txt
 
-## Lisans
+# Alternatif olarak
+pip install -r requirements-py313.txt
+```
 
-Bu proje MIT Lisansı altında lisanslanmıştır. Detaylar için `LICENSE` dosyasına bakınız. 
+### 4. Ortam Değişkenlerini Ayarlayın
+`.env` dosyası oluşturun:
+```env
+NEWS_API_KEY=your_news_api_key_here
+FLASK_ENV=development
+SECRET_KEY=your_secret_key_here
+```
+
+### 5. Uygulamayı Başlatın
+```bash
+python run.py
+```
+
+## 💻 Kullanım
+
+1. **Web Arayüzü:** `http://127.0.0.1:5000/` adresine gidin
+2. **Hisse Seçimi:** Kenar çubuğundan hisse senedi seçin
+3. **Analiz Periyodu:** İstediğiniz zaman dilimini belirleyin
+4. **Tahmin Süresi:** Kaç günlük tahmin istediğinizi seçin
+5. **Analiz Et:** Kapsamlı analizi görüntüleyin
+
+### Desteklenen Hisse Senetleri
+- **BIST:** AKBNK.IS, GARAN.IS, TUPRS.IS, BIMAS.IS, THYAO.IS
+- **ABD:** AAPL, GOOGL, MSFT, TSLA, AMZN, NVDA
+- **Ve daha fazlası...**
+
+## 🛠️ Teknolojiler
+
+### Backend
+- **Flask:** Web framework
+- **SQLAlchemy:** Database ORM
+- **Pandas:** Veri manipülasyonu
+- **NumPy:** Numerik hesaplamalar
+
+### Machine Learning
+- **LightGBM:** Microsoft'un gradient boosting kütüphanesi
+- **Prophet:** Facebook'un zaman serisi kütüphanesi
+- **Scikit-learn:** RandomForest ve diğer ML araçları
+- **Transformers:** Hugging Face FinBERT modeli
+
+### Veri Kaynakları
+- **yfinance:** Yahoo Finance API
+- **NewsAPI:** Güncel haber verileri
+- **ta:** Teknik analiz göstergeleri
+
+### Frontend
+- **Plotly:** İnteraktif grafikler
+- **Bootstrap:** Responsive UI
+- **JavaScript:** Dinamik içerik
+
+## 🔧 Yapılandırma
+
+### Model Ayarları
+```python
+# config.py içinde
+PREDICTION_MODELS = ['lightgbm', 'prophet', 'randomforest']
+ENSEMBLE_WEIGHTS = {'lightgbm': 0.4, 'prophet': 0.4, 'randomforest': 0.2}
+CACHE_MAX_AGE_SECONDS = 3600
+```
+
+### Error Handling
+```python
+SAFE_MODE = True  # Hataları graceful handle et
+DEBUG_MODE = False  # Production için False
+LOG_LEVEL = 'INFO'
+```
+
+## 🧪 Test Etme
+
+```bash
+# Tüm sistem testleri
+python final_test.py
+
+# Timezone testleri
+python test_timezone_fixes.py
+
+# Model testleri
+python test_improved_models.py
+```
+
+## 📊 Model Performansı
+
+| Model | Accuracy | Speed | Reliability |
+|-------|----------|-------|-------------|
+| LightGBM | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| Prophet | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| RandomForest | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| Ensemble | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+
+## 🚨 Sorun Giderme
+
+### Yaygın Hatalar
+
+1. **Timezone Hatası**
+   ```bash
+   # Timezone fonksiyonlarını test edin
+   python test_timezone_fixes.py
+   ```
+
+2. **Model Import Hatası**
+   ```bash
+   # Bağımlılıkları tekrar yükleyin
+   pip install --upgrade -r requirements.txt
+   ```
+
+3. **API Limit Hatası**
+   ```
+   # Demo mod otomatik aktif olur
+   Gerçek veriler yerine demo veriler kullanılır
+   ```
+
+## 🤝 Katkıda Bulunma
+
+1. Fork yapın
+2. Feature branch oluşturun (`git checkout -b feature/AmazingFeature`)
+3. Commit yapın (`git commit -m 'Add some AmazingFeature'`)
+4. Push yapın (`git push origin feature/AmazingFeature`)
+5. Pull Request açın
+
+## 📝 Changelog
+
+### v2.0.0 (2025-05-24)
+- ✅ Modern ML modelleri (LightGBM, Prophet)
+- ✅ Kapsamlı error handling sistemi
+- ✅ Timezone-aware datetime işlemleri
+- ✅ İş günü hesaplaması
+- ✅ Ensemble modeling
+- ✅ FinBERT sentiment analizi
+
+### v1.0.0 (2025-01-01)
+- 🎉 İlk sürüm
+- ⚡ XGBoost model
+- 📊 Temel teknik analiz
+
+## 📄 Lisans
+
+Bu proje MIT Lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakınız.
+
+## 👨‍💻 Geliştirici
+
+**bahaenes** - [GitHub Profile](https://github.com/bahaenes)
+
+## 🙏 Teşekkürler
+
+- Yahoo Finance - Finansal veri API
+- Hugging Face - FinBERT modeli
+- Microsoft - LightGBM
+- Facebook - Prophet
+- NewsAPI - Haber verileri
+
+---
+
+⭐ Bu projeyi beğendiyseniz star vermeyi unutmayın! 

@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}Karşılaştırma Sonuçları - Finans Analiz Aracı{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="main-container fade-in">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-primary mb-1">
+                    <i class="bi bi-bar-chart me-2"></i>
+                    Karşılaştırma Sonuçları
+                </h2>
+                <p class="text-muted mb-0">
+                    {{ selected_tickers|join(', ') }} - {{ period.upper() }} dönemi
+                </p>
+            </div>
+            <div>
+                <a href="{{ url_for('main.compare') }}" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left me-1"></i>
+                    Yeni Karşılaştırma
+                </a>
+                <button class="btn btn-primary" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i>
+                    Yazdır
+                </button>
+            </div>
+        </div>
+
+        <!-- Karşılaştırma Grafiği -->
+        {% if comparison_chart %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-graph-up me-2"></i>
+                    Performans Karşılaştırması (Normalize Edilmiş %)
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="chart-container">
+                    {{ comparison_chart|safe }}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Performans Tablosu -->
+        {% if performance_data %}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-table me-2"></i>
+                    Performans Özeti
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Hisse Senedi</th>
+                                <th>Başlangıç Fiyatı</th>
+                                <th>Güncel Fiyat</th>
+                                <th>Toplam Getiri</th>
+                                <th>Performans</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ticker, data in performance_data.items() %}
+                            <tr>
+                                <td>
+                                    <strong>{{ ticker }}</strong>
+                                </td>
+                                <td>{{ "%.2f"|format(data.start_price) }}</td>
+                                <td>{{ "%.2f"|format(data.current_price) }}</td>
+                                <td class="{% if data.total_return >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ "%+.2f"|format(data.total_return) }}%
+                                </td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {% if data.total_return >= 0 %}bg-success{% else %}bg-danger{% endif %}" 
+                                             style="width: {{ (data.total_return|abs / (performance_data.values()|map(attribute='total_return')|map('abs')|max + 1)) * 100 }}%">
+                                            {{ "%+.1f"|format(data.total_return) }}%
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- İstatistikler -->
+        <div class="row mb-4">
+            <div class="col-lg-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-success text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-trophy me-2"></i>
+                            En İyi Performans
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        {% set best_performer = performance_data.items()|list|sort(attribute='1.total_return', reverse=true)|first %}
+                        <h3 class="text-success">{{ best_performer[0] }}</h3>
+                        <h4 class="text-success">{{ "%+.2f"|format(best_performer[1].total_return) }}%</h4>
+                        <p class="text-muted mb-0">{{ period.upper() }} döneminde en iyi performans</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-danger text-white">
+                        <h6 class="mb-0">
+                            <i class="bi bi-arrow-down me-2"></i>
+                            En Düşük Performans
+                        </h6>
+                    </div>
+                    <div class="card-body text-center">
+                        {% set worst_performer = performance_data.items()|list|sort(attribute='1.total_return')|first %}
+                        <h3 class="text-danger">{{ worst_performer[0] }}</h3>
+                        <h4 class="text-danger">{{ "%+.2f"|format(worst_performer[1].total_return) }}%</h4>
+                        <p class="text-muted mb-0">{{ period.upper() }} döneminde en düşük performans</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Özet Bilgiler -->
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="card bg-primary text-white h-100">
+                    <div class="card-body text-center">
+                        <h4>{{ selected_tickers|length }}</h4>
+                        <p class="mb-0">Karşılaştırılan Hisse</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body text-center">
+                        <h4>{{ performance_data.values()|selectattr('total_return', 'gt', 0)|list|length }}</h4>
+                        <p class="mb-0">Pozitif Getiri</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-danger text-white h-100">
+                    <div class="card-body text-center">
+                        <h4>{{ performance_data.values()|selectattr('total_return', 'lt', 0)|list|length }}</h4>
+                        <p class="mb-0">Negatif Getiri</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-3 mb-3">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body text-center">
+                        <h4>{{ "%.1f"|format((performance_data.values()|map(attribute='total_return')|sum) / (performance_data.values()|list|length)) }}%</h4>
+                        <p class="mb-0">Ortalama Getiri</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analiz Notları -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    Analiz Notları
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <h6>📊 Karşılaştırma Hakkında:</h6>
+                    <ul class="mb-0">
+                        <li>Tüm hisse senetleri {{ period.upper() }} dönemine göre normalize edilmiştir</li>
+                        <li>Grafikte gösterilen yüzdeler, seçilen periyodun başındaki fiyata göre hesaplanmıştır</li>
+                        <li>En iyi performans gösteren hisse: <strong>{{ best_performer[0] }}</strong> ({{ "%+.2f"|format(best_performer[1].total_return) }}%)</li>
+                        <li>Ortalama portföy performansı: <strong>{{ "%.1f"|format((performance_data.values()|map(attribute='total_return')|sum) / (performance_data.values()|list|length)) }}%</strong></li>
+                    </ul>
+                </div>
+                
+                <div class="alert alert-warning mt-3">
+                    <h6>⚠️ Önemli Uyarı:</h6>
+                    <p class="mb-0">
+                        Bu karşılaştırma sadece geçmiş performansa dayanmaktadır ve gelecekteki 
+                        performans garantisi vermez. Yatırım kararları alırken mutlaka detaylı 
+                        analiz yapın ve finansal danışmanınıza başvurun.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hızlı Eylemler -->
+        <div class="text-center">
+            {% for ticker in selected_tickers %}
+            <a href="{{ url_for('main.analyze') }}?ticker={{ ticker }}" 
+               class="btn btn-outline-primary me-2 mb-2">
+                <i class="bi bi-graph-up me-1"></i>
+                {{ ticker }} Analizi
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+@media print {
+    .navbar, footer, .btn {
+        display: none !important;
+    }
+    
+    .main-container {
+        margin: 0 !important;
+        padding: 1rem !important;
+        box-shadow: none !important;
+        background: white !important;
+    }
+    
+    .card {
+        border: 1px solid #ccc !important;
+        margin-bottom: 1rem !important;
+    }
+}
+
+.chart-container {
+    min-height: 500px;
+}
+
+.table th {
+    border-top: none;
+}
+
+.progress {
+    position: relative;
+}
+
+.progress-bar {
+    min-width: 50px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Sayfa yüklendiğinde animasyonları başlat
+document.addEventListener('DOMContentLoaded', function() {
+    // Progress bar animasyonları
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 500);
+    });
+
+    // Grafik responsive yapma
+    window.addEventListener('resize', function() {
+        if (window.Plotly) {
+            const plotElements = document.querySelectorAll('.js-plotly-plot');
+            plotElements.forEach(element => {
+                Plotly.Plots.resize(element);
+            });
+        }
+    });
+});
+</script>
+{% endblock %} 
