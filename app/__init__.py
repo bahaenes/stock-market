@@ -1,10 +1,18 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
+from flask_mail import Mail
+from flask_talisman import Talisman
 from config import config
 import logging
 import os
 
 db = SQLAlchemy()
+login = LoginManager()
+csrf = CSRFProtect()
+mail = Mail()
+talisman = Talisman()
 
 def create_app(config_name=None):
     app = Flask(__name__)
@@ -18,8 +26,50 @@ def create_app(config_name=None):
     # Logging yapılandırması
     configure_logging(app)
     
-    # Database initialization
+    # Initialize extensions
     db.init_app(app)
+    
+    # Login Manager
+    login.init_app(app)
+    login.login_view = 'auth.login'
+    login.login_message = 'Please log in to access this page.'
+    login.login_message_category = 'info'
+    
+    # CSRF Protection
+    csrf.init_app(app)
+    
+    # Mail
+    mail.init_app(app)
+    
+    # Security Headers (Talisman)
+    talisman.init_app(
+        app,
+        force_https=app.config.get('FORCE_HTTPS', False),
+        content_security_policy={
+            'default-src': "'self'",
+            'script-src': [
+                "'self'",
+                "'unsafe-inline'",
+                "https://cdnjs.cloudflare.com",
+                "https://cdn.plot.ly"
+            ],
+            'style-src': [
+                "'self'",
+                "'unsafe-inline'",
+                "https://cdnjs.cloudflare.com",
+                "https://fonts.googleapis.com"
+            ],
+            'font-src': [
+                "'self'",
+                "https://fonts.gstatic.com"
+            ],
+            'img-src': [
+                "'self'",
+                "data:",
+                "https:"
+            ]
+        }
+    )
     
     # Error handling sistemi başlat
     try:
@@ -32,6 +82,9 @@ def create_app(config_name=None):
     # Register Blueprints
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
+    
+    from app.auth import auth as auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/auth')
     
     # Global error handlers
     register_error_handlers(app)

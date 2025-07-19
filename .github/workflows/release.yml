@@ -1,0 +1,363 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    name: Create Release
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.VERSION }}
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Get version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+    
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Generate changelog from git commits
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+        if [ -n "$PREVIOUS_TAG" ]; then
+          CHANGELOG=$(git log $PREVIOUS_TAG..HEAD --pretty=format:"- %s (%h)" --no-merges)
+        else
+          CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+        fi
+        
+        echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+        echo "$CHANGELOG" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: Release ${{ steps.get_version.outputs.VERSION }}
+        body: |
+          ## Changes in ${{ steps.get_version.outputs.VERSION }}
+          
+          ${{ steps.changelog.outputs.CHANGELOG }}
+          
+          ## Docker Images
+          
+          ```bash
+          docker pull ghcr.io/${{ github.repository }}:${{ steps.get_version.outputs.VERSION }}
+          docker pull ghcr.io/${{ github.repository }}:latest
+          ```
+          
+          ## Installation
+          
+          ```bash
+          git clone https://github.com/${{ github.repository }}.git
+          cd stock-market
+          git checkout ${{ steps.get_version.outputs.VERSION }}
+          pip install -r requirements.txt
+          ```
+          
+          ## What's Changed
+          
+          See the [full changelog](https://github.com/${{ github.repository }}/compare/${{ steps.get_version.outputs.VERSION }}...main) for all changes.
+        draft: false
+        prerelease: false
+
+  build-and-test:
+    runs-on: ubuntu-latest
+    name: Build and Test Release
+    needs: create-release
+    
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -r tests/requirements.txt
+    
+    - name: Run tests
+      run: |
+        pytest tests/ --tb=short -v
+    
+    - name: Build distribution packages
+      if: matrix.python-version == '3.11'
+      run: |
+        pip install build twine
+        python -m build
+    
+    - name: Check distribution packages
+      if: matrix.python-version == '3.11'
+      run: |
+        twine check dist/*
+    
+    - name: Upload distribution packages
+      if: matrix.python-version == '3.11'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: dist/
+        asset_name: python-packages
+        asset_content_type: application/zip
+
+  build-docker:
+    runs-on: ubuntu-latest
+    name: Build and Push Docker Images
+    needs: [create-release, build-and-test]
+    
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=tag
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Generate SBOM
+      uses: anchore/sbom-action@v0
+      with:
+        image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.create-release.outputs.version }}
+        format: spdx-json
+        output-file: sbom.spdx.json
+    
+    - name: Upload SBOM
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ needs.create-release.outputs.upload_url }}
+        asset_path: sbom.spdx.json
+        asset_name: sbom.spdx.json
+        asset_content_type: application/json
+
+  security-scan:
+    runs-on: ubuntu-latest
+    name: Security Scan Release
+    needs: [create-release, build-docker]
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.create-release.outputs.version }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+    
+    - name: Run container security audit
+      run: |
+        docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+          aquasec/trivy image \
+          --severity HIGH,CRITICAL \
+          --format table \
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.create-release.outputs.version }}
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    name: Deploy to Production
+    needs: [create-release, build-docker, security-scan]
+    environment: production
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+    
+    - name: Deploy to ECS
+      run: |
+        # Update ECS service with new image
+        aws ecs update-service \
+          --cluster stock-app-production \
+          --service stock-app-service \
+          --task-definition stock-app-production:LATEST \
+          --force-new-deployment
+        
+        # Wait for deployment to complete
+        aws ecs wait services-stable \
+          --cluster stock-app-production \
+          --services stock-app-service
+    
+    - name: Run smoke tests
+      run: |
+        # Test health endpoint
+        curl -f https://stockanalysis.com/api/health
+        
+        # Test main functionality
+        curl -f https://stockanalysis.com/api/stocks
+        
+        # Test authentication endpoints
+        curl -f https://stockanalysis.com/auth/login
+    
+    - name: Update deployment status
+      run: |
+        # Create deployment status
+        curl -X POST \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/repos/${{ github.repository }}/deployments \
+          -d '{
+            "ref": "${{ github.sha }}",
+            "environment": "production",
+            "description": "Production deployment of ${{ needs.create-release.outputs.version }}",
+            "auto_merge": false
+          }'
+
+  notify:
+    runs-on: ubuntu-latest
+    name: Notify Release
+    needs: [create-release, deploy-production]
+    if: always()
+    
+    steps:
+    - name: Notify Slack - Success
+      if: needs.deploy-production.result == 'success'
+      uses: 8398a7/action-slack@v3
+      with:
+        status: success
+        text: |
+          🚀 Release ${{ needs.create-release.outputs.version }} deployed successfully!
+          
+          📦 Docker Image: ghcr.io/${{ github.repository }}:${{ needs.create-release.outputs.version }}
+          🌐 Production: https://stockanalysis.com
+          📋 Release Notes: https://github.com/${{ github.repository }}/releases/tag/${{ needs.create-release.outputs.version }}
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+    
+    - name: Notify Slack - Failure
+      if: needs.deploy-production.result == 'failure'
+      uses: 8398a7/action-slack@v3
+      with:
+        status: failure
+        text: |
+          ❌ Release ${{ needs.create-release.outputs.version }} deployment failed!
+          
+          Please check the GitHub Actions logs for details.
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+    
+    - name: Notify team via email
+      if: needs.deploy-production.result == 'success'
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "Stock Analysis App - Release ${{ needs.create-release.outputs.version }} Deployed"
+        body: |
+          Hello Team,
+          
+          Release ${{ needs.create-release.outputs.version }} has been successfully deployed to production.
+          
+          🌐 Application: https://stockanalysis.com
+          📋 Release Notes: https://github.com/${{ github.repository }}/releases/tag/${{ needs.create-release.outputs.version }}
+          📦 Docker Image: ghcr.io/${{ github.repository }}:${{ needs.create-release.outputs.version }}
+          
+          Best regards,
+          CI/CD Pipeline
+        to: ${{ secrets.TEAM_EMAIL }}
+        from: ${{ secrets.EMAIL_USERNAME }}
+
+  post-release:
+    runs-on: ubuntu-latest
+    name: Post-Release Tasks
+    needs: [create-release, deploy-production]
+    if: needs.deploy-production.result == 'success'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Update documentation
+      run: |
+        # Update version in documentation
+        sed -i 's/version = .*/version = "${{ needs.create-release.outputs.version }}"/' docs/conf.py || true
+        
+        # Update CHANGELOG.md
+        echo "## ${{ needs.create-release.outputs.version }} - $(date +%Y-%m-%d)" >> CHANGELOG.temp
+        echo "" >> CHANGELOG.temp
+        echo "${{ steps.changelog.outputs.CHANGELOG }}" >> CHANGELOG.temp
+        echo "" >> CHANGELOG.temp
+        cat CHANGELOG.md >> CHANGELOG.temp
+        mv CHANGELOG.temp CHANGELOG.md
+    
+    - name: Create documentation PR
+      uses: peter-evans/create-pull-request@v5
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "docs: Update for release ${{ needs.create-release.outputs.version }}"
+        title: "Update documentation for release ${{ needs.create-release.outputs.version }}"
+        body: |
+          Automated documentation update for release ${{ needs.create-release.outputs.version }}.
+          
+          This PR updates:
+          - Version information in documentation
+          - CHANGELOG.md with release notes
+        branch: docs/release-${{ needs.create-release.outputs.version }}
+        delete-branch: true

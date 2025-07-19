@@ -1,51 +1,51 @@
-# 📈 Finans Analiz Aracı - Türkiye Finans Piyasaları
+# Stock Market Analysis Tool - Turkey Financial Markets
 
-Bu proje, Flask kullanılarak geliştirilmiş gelişmiş bir web uygulamasıdır. Kullanıcılara hisse senedi verilerini analiz etme, modern makine öğrenmesi modelleri ile fiyat tahmini yapma, teknik göstergeleri görüntüleme ve haber duyarlılık analizi yapma imkanı sunar.
+A modern Flask web application for analyzing stock data, making price predictions using machine learning models, viewing technical indicators, and performing news sentiment analysis.
 
-## ✨ Özellikler
+## Features
 
-### 📊 Veri Analizi
-- **Kapsamlı Hisse Senedi Listesi:** BIST ve ABD borsalarından popüler hisse senetleri
-- **Gerçek Zamanlı Veri:** Yahoo Finance API ile güncel veriler
-- **Teknik Göstergeler:** RSI, MACD, Bollinger Bantları, hareketli ortalamalar
+### Data Analysis
+- Comprehensive stock list from BIST and US markets
+- Real-time data via Yahoo Finance API
+- Technical indicators: RSI, MACD, Bollinger Bands, moving averages
 
-### 🤖 Modern ML Modelleri
-- **LightGBM:** Gradient boosting ile yüksek performanslı tahmin
-- **Prophet:** Facebook'un zaman serisi analiz modeli
-- **RandomForest:** Ensemble öğrenme yöntemi
-- **Ensemble Modeling:** Birden fazla modelin birleşimi ile daha güvenilir tahminler
+### Machine Learning Models
+- LightGBM: High-performance gradient boosting predictions
+- Prophet: Facebook's time series analysis model
+- RandomForest: Ensemble learning method
+- Ensemble Modeling: Combined predictions for improved reliability
 
-### 📰 Duyarlılık Analizi
-- **FinBERT:** Finans alanına özel BERT modeli ile haber analizi
-- **VADER Sentiment:** Güvenli fallback analiz
-- **Güncel Haberler:** NewsAPI entegrasyonu
+### Sentiment Analysis
+- FinBERT: Finance-specific BERT model for news analysis
+- VADER Sentiment: Safe fallback analysis
+- Current News: NewsAPI integration
 
-### 🛡️ Güvenilirlik ve Performans
-- **Kapsamlı Error Handling:** Güvenli fallback mekanizmaları
-- **Timezone Handling:** Global timezone desteği
-- **Önbellekleme:** Hızlı veri erişimi
-- **İş Günü Hesaplaması:** Gerçekçi tahmin tarihleri
+### Reliability and Performance
+- Comprehensive error handling with graceful fallbacks
+- Timezone handling with global timezone support
+- Caching for fast data access
+- Business day calculations for realistic prediction dates
 
-### 🎨 Kullanıcı Arayüzü
-- **Dinamik Grafikleme:** Plotly ile interaktif grafikler
-- **Responsive Design:** Mobil uyumlu tasarım
-- **Türkçe Arayüz:** Tam Türkçe destek
-- **Gerçek Zamanlı Güncelleme:** Anlık veri güncellemeleri
+### User Interface
+- Dynamic plotting with interactive Plotly charts
+- Responsive mobile-friendly design
+- Full Turkish language support
+- Real-time data updates
 
-## 🚀 Kurulum
+## Installation
 
-### Gereksinimler
-- Python 3.9+ (Python 3.13 test edildi)
+### Requirements
+- Python 3.9+ (Python 3.13 tested)
 - pip
-- İnternet bağlantısı
+- Internet connection
 
-### 1. Projeyi Klonlayın
+### 1. Clone the Repository
 ```bash
 git clone https://github.com/username/stock-market.git
 cd stock-market
 ```
 
-### 2. Sanal Ortam Oluşturun
+### 2. Create Virtual Environment
 ```bash
 python -m venv venv
 
@@ -56,70 +56,70 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-### 3. Bağımlılıkları Yükleyin
+### 3. Install Dependencies
 ```bash
-# Python 3.13 için optimize edilmiş
+# Optimized for Python 3.13
 pip install -r requirements.txt
 
-# Alternatif olarak
+# Alternative
 pip install -r requirements-py313.txt
 ```
 
-### 4. Ortam Değişkenlerini Ayarlayın
-`.env` dosyası oluşturun:
+### 4. Set Environment Variables
+Create a `.env` file:
 ```env
 NEWS_API_KEY=your_news_api_key_here
 FLASK_ENV=development
 SECRET_KEY=your_secret_key_here
 ```
 
-### 5. Uygulamayı Başlatın
+### 5. Start the Application
 ```bash
 python run.py
 ```
 
-## 💻 Kullanım
+## Usage
 
-1. **Web Arayüzü:** `http://127.0.0.1:5000/` adresine gidin
-2. **Hisse Seçimi:** Kenar çubuğundan hisse senedi seçin
-3. **Analiz Periyodu:** İstediğiniz zaman dilimini belirleyin
-4. **Tahmin Süresi:** Kaç günlük tahmin istediğinizi seçin
-5. **Analiz Et:** Kapsamlı analizi görüntüleyin
+1. **Web Interface:** Navigate to `http://127.0.0.1:5000/`
+2. **Stock Selection:** Choose a stock from the sidebar
+3. **Analysis Period:** Select your desired time frame
+4. **Prediction Duration:** Choose how many days to predict
+5. **Analyze:** View comprehensive analysis
 
-### Desteklenen Hisse Senetleri
+### Supported Stocks
 - **BIST:** AKBNK.IS, GARAN.IS, TUPRS.IS, BIMAS.IS, THYAO.IS
-- **ABD:** AAPL, GOOGL, MSFT, TSLA, AMZN, NVDA
-- **Ve daha fazlası...**
+- **US:** AAPL, GOOGL, MSFT, TSLA, AMZN, NVDA
+- **And more...**
 
-## 🛠️ Teknolojiler
+## Technologies
 
 ### Backend
-- **Flask:** Web framework
-- **SQLAlchemy:** Database ORM
-- **Pandas:** Veri manipülasyonu
-- **NumPy:** Numerik hesaplamalar
+- Flask: Web framework
+- SQLAlchemy: Database ORM
+- Pandas: Data manipulation
+- NumPy: Numerical computations
 
 ### Machine Learning
-- **LightGBM:** Microsoft'un gradient boosting kütüphanesi
-- **Prophet:** Facebook'un zaman serisi kütüphanesi
-- **Scikit-learn:** RandomForest ve diğer ML araçları
-- **Transformers:** Hugging Face FinBERT modeli
+- LightGBM: Microsoft's gradient boosting library
+- Prophet: Facebook's time series library
+- Scikit-learn: RandomForest and other ML tools
+- Transformers: Hugging Face FinBERT model
 
-### Veri Kaynakları
-- **yfinance:** Yahoo Finance API
-- **NewsAPI:** Güncel haber verileri
-- **ta:** Teknik analiz göstergeleri
+### Data Sources
+- yfinance: Yahoo Finance API
+- NewsAPI: Current news data
+- ta: Technical analysis indicators
 
 ### Frontend
-- **Plotly:** İnteraktif grafikler
-- **Bootstrap:** Responsive UI
-- **JavaScript:** Dinamik içerik
+- Plotly: Interactive charts
+- Bootstrap: Responsive UI
+- JavaScript: Dynamic content
 
-## 🔧 Yapılandırma
+## Configuration
 
-### Model Ayarları
+### Model Settings
 ```python
-# config.py içinde
+# In config.py
 PREDICTION_MODELS = ['lightgbm', 'prophet', 'randomforest']
 ENSEMBLE_WEIGHTS = {'lightgbm': 0.4, 'prophet': 0.4, 'randomforest': 0.2}
 CACHE_MAX_AGE_SECONDS = 3600
@@ -127,94 +127,90 @@ CACHE_MAX_AGE_SECONDS = 3600
 
 ### Error Handling
 ```python
-SAFE_MODE = True  # Hataları graceful handle et
-DEBUG_MODE = False  # Production için False
+SAFE_MODE = True  # Handle errors gracefully
+DEBUG_MODE = False  # False for production
 LOG_LEVEL = 'INFO'
 ```
 
-## 🧪 Test Etme
+## Testing
 
 ```bash
-# Tüm sistem testleri
+# Comprehensive system tests
 python final_test.py
 
-# Timezone testleri
+# Timezone tests
 python test_timezone_fixes.py
 
-# Model testleri
+# Model tests
 python test_improved_models.py
 ```
 
-## 📊 Model Performansı
+## Model Performance
 
 | Model | Accuracy | Speed | Reliability |
 |-------|----------|-------|-------------|
-| LightGBM | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
-| Prophet | ⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
-| RandomForest | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
-| Ensemble | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| LightGBM | High | High | Very High |
+| Prophet | High | Medium | High |
+| RandomForest | Medium | Very High | High |
+| Ensemble | Very High | Medium | Very High |
 
-## 🚨 Sorun Giderme
+## Troubleshooting
 
-### Yaygın Hatalar
+### Common Issues
 
-1. **Timezone Hatası**
+1. **Timezone Error**
    ```bash
-   # Timezone fonksiyonlarını test edin
+   # Test timezone functions
    python test_timezone_fixes.py
    ```
 
-2. **Model Import Hatası**
+2. **Model Import Error**
    ```bash
-   # Bağımlılıkları tekrar yükleyin
+   # Reinstall dependencies
    pip install --upgrade -r requirements.txt
    ```
 
-3. **API Limit Hatası**
+3. **API Limit Error**
    ```
-   # Demo mod otomatik aktif olur
-   Gerçek veriler yerine demo veriler kullanılır
+   # Demo mode automatically activates
+   Demo data is used instead of real data
    ```
 
-## 🤝 Katkıda Bulunma
+## Contributing
 
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/AmazingFeature`)
-3. Commit yapın (`git commit -m 'Add some AmazingFeature'`)
-4. Push yapın (`git push origin feature/AmazingFeature`)
-5. Pull Request açın
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📝 Changelog
+## Changelog
 
 ### v2.0.0 (2025-05-24)
-- ✅ Modern ML modelleri (LightGBM, Prophet)
-- ✅ Kapsamlı error handling sistemi
-- ✅ Timezone-aware datetime işlemleri
-- ✅ İş günü hesaplaması
-- ✅ Ensemble modeling
-- ✅ FinBERT sentiment analizi
+- Modern ML models (LightGBM, Prophet)
+- Comprehensive error handling system
+- Timezone-aware datetime operations
+- Business day calculations
+- Ensemble modeling
+- FinBERT sentiment analysis
 
 ### v1.0.0 (2025-01-01)
-- 🎉 İlk sürüm
-- ⚡ XGBoost model
-- 📊 Temel teknik analiz
+- Initial release
+- XGBoost model
+- Basic technical analysis
 
-## 📄 Lisans
+## License
 
-Bu proje MIT Lisansı altında lisanslanmıştır. Detaylar için [LICENSE](LICENSE) dosyasına bakınız.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 👨‍💻 Geliştirici
+## Developer
 
 **bahaenes** - [GitHub Profile](https://github.com/bahaenes)
 
-## 🙏 Teşekkürler
+## Acknowledgments
 
-- Yahoo Finance - Finansal veri API
-- Hugging Face - FinBERT modeli
+- Yahoo Finance - Financial data API
+- Hugging Face - FinBERT model
 - Microsoft - LightGBM
 - Facebook - Prophet
-- NewsAPI - Haber verileri
-
----
-
-⭐ Bu projeyi beğendiyseniz star vermeyi unutmayın! 
+- NewsAPI - News data

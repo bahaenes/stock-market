@@ -1,5 +1,10 @@
 from datetime import datetime
-from app import db
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin
+from flask import current_app
+import jwt
+from time import time
+from app import db, login
 
 class Stock(db.Model):
     """Hisse senedi modeli."""
@@ -23,8 +28,14 @@ class Stock(db.Model):
     def __repr__(self):
         return f'<Stock {self.ticker}: {self.name}>'
 
-class User(db.Model):
-    """Kullanıcı modeli."""
+@login.user_loader
+def load_user(id):
+    """Flask-Login user loader."""
+    return User.query.get(int(id))
+
+
+class User(UserMixin, db.Model):
+    """Kullanıcı modeli with authentication."""
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -33,6 +44,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(128))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
     
     # İlişkiler
     portfolios = db.relationship('Portfolio', backref='user', lazy='dynamic')
@@ -40,6 +52,45 @@ class User(db.Model):
     
     def __repr__(self):
         return f'<User {self.username}>'
+    
+    def set_password(self, password):
+        """Set password hash."""
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        """Check password hash."""
+        return check_password_hash(self.password_hash, password)
+    
+    def get_reset_password_token(self, expires_in=600):
+        """Generate password reset token."""
+        return jwt.encode(
+            {'reset_password': self.id, 'exp': time() + expires_in},
+            current_app.config['SECRET_KEY'], 
+            algorithm='HS256'
+        )
+    
+    @staticmethod
+    def verify_reset_password_token(token):
+        """Verify password reset token."""
+        try:
+            id = jwt.decode(
+                token, 
+                current_app.config['SECRET_KEY'],
+                algorithms=['HS256']
+            )['reset_password']
+        except:
+            return
+        return User.query.get(id)
+    
+    def to_dict(self):
+        """Convert user to dictionary."""
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'created_at': self.created_at.isoformat() + 'Z',
+            'last_seen': self.last_seen.isoformat() + 'Z' if self.last_seen else None
+        }
 
 class Portfolio(db.Model):
     """Portföy modeli."""

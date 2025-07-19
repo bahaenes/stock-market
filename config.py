@@ -10,6 +10,22 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///finans_analiz.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
+    # Security settings
+    WTF_CSRF_TIME_LIMIT = 3600  # 1 hour
+    FORCE_HTTPS = os.environ.get('FORCE_HTTPS', 'false').lower() == 'true'
+    SESSION_COOKIE_SECURE = FORCE_HTTPS
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    PERMANENT_SESSION_LIFETIME = 86400  # 24 hours
+    
+    # Mail settings
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'localhost')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true'
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@stockanalysis.com')
+    
     # Cache settings
     CACHE_MAX_AGE_SECONDS = 300  # 5 dakika
     
@@ -76,6 +92,10 @@ class ProductionConfig(Config):
     USE_FINBERT = True
     YFINANCE_RATE_LIMIT = 5  # Production için düşük limit
     LOG_LEVEL = 'INFO'
+    
+    # Production security
+    FORCE_HTTPS = True
+    SESSION_COOKIE_SECURE = True
 
 class TestingConfig(Config):
     """Testing configuration."""
